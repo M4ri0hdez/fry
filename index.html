@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Intro Juego</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 👤 INFO DE USUARIO (superior derecha) -->
+  <div id="info-usuario" class="info-usuario">
+    <span id="nombre-usuario">🔒 Sin sesión</span>
+    <button id="btn-cerrar-sesion" class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar Sesión</button>
+  </div>
+
+  <button id="start">Iniciar</button>
+
+  <video id="video" loop playsinline>
+    <source src="inicio.mp4" type="video/mp4">
+  </video>
+
+  <div id="menu">
+    <button onclick="iniciar()">Jugar</button>
+    <button onclick="irASesion()">Sesión</button>
+    <!-- 🚪 SALIR ahora cierra la página -->
+    <button onclick="salirJuego()">Salir</button>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const btn = document.getElementById("start");
+    const menu = document.getElementById("menu");
+
+    let menuMostrado = false;
+
+    // ===================================
+    // 👤 CARGAR INFO DE USUARIO AL INICIAR
+    // ===================================
+    document.addEventListener("DOMContentLoaded", () => {
+      actualizarInfoUsuario();
+    });
+
+    function actualizarInfoUsuario() {
+      const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
+      const nombreEl = document.getElementById('nombre-usuario');
+      const btnCerrar = document.getElementById('btn-cerrar-sesion');
+      const infoContainer = document.getElementById('info-usuario');
+
+      if (sesion && sesion.loggedIn) {
+        // ✅ Hay sesión activa
+        nombreEl.textContent = `👤 ${sesion.usuario}`;
+        infoContainer.classList.add('activo');
+        btnCerrar.style.display = 'inline-block';
+        console.log(`👤 Usuario activo: ${sesion.usuario}`);
+      } else {
+        // ❌ Sin sesión
+        nombreEl.textContent = '🔒 Sin sesión';
+        infoContainer.classList.remove('activo');
+        btnCerrar.style.display = 'none';
+      }
+    }
+
+    // ▶️ INICIAR VIDEO
+    btn.addEventListener("click", () => {
+      video.style.display = "block";
+      btn.style.display = "none";
+      video.muted = false;
+      video.volume = 1;
+      video.play();
+    });
+
+    // ⏱️ MOSTRAR MENÚ EN SEGUNDO 6
+    video.addEventListener("timeupdate", () => {
+      if (video.currentTime >= 6 && !menuMostrado) {
+        menu.style.display = "flex";
+        setTimeout(() => menu.classList.add("mostrar"), 50);
+        menuMostrado = true;
+        
+        // Actualizar info de usuario cuando aparece el menú
+        actualizarInfoUsuario();
+      }
+    });
+
+    // 🚫 EVITAR PAUSA
+    video.addEventListener("pause", () => {
+      video.play();
+    });
+
+    // 🎮 JUGAR
+    function iniciar() {
+      document.body.style.opacity = "0";
+      setTimeout(() => {
+        window.location.href = "niveles.html";
+      }, 500);
+    }
+
+    // 🔑 IR A SESIÓN
+    function irASesion() {
+      window.location.href = "sesion.html";
+    }
+
+    // 🚪 CERRAR PÁGINA (Salir del juego)
+    function salirJuego() {
+      if (confirm('¿Seguro que quieres salir del juego?')) {
+        // Cerrar la pestaña/ventana del navegador
+        window.close();
+        
+        // Si window.close() no funciona (la mayoría de navegadores lo bloquean),
+        // mostrar mensaje alternativo
+        setTimeout(() => {
+          alert('Puedes cerrar esta pestaña manualmente.\n\nGracias por jugar! 🎮');
+        }, 100);
+      }
+    }
+
+    // 🔒 CERRAR SESIÓN
+    function cerrarSesion() {
+      if (confirm('¿Quieres cerrar tu sesión?')) {
+        localStorage.removeItem('juego_sesion');
+        console.log('🔒 Sesión cerrada');
+        
+        // Actualizar la interfaz inmediatamente
+        actualizarInfoUsuario();
+        
+        // Opcional: recargar después de un momento
+        // location.reload();
+      }
+    }
+  </script>
+
+</body>
+</html>

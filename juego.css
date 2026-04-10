@@ -1,0 +1,126 @@
+body, html {
+  margin: 0; padding: 0; height: 100%;
+  background: black; overflow: hidden;
+  font-family: Arial, sans-serif; color: white; cursor: pointer;
+}
+
+#fondo {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; z-index: 0;
+  pointer-events: none; 
+}
+
+#p2 {
+  position: absolute; bottom: 0; right: 50px; height: 240px;
+  z-index: 1; object-fit: contain; opacity: 0; transition: opacity 1.5s ease-in-out;
+  pointer-events: none; 
+}
+
+#contenedor-p1 {
+  position: absolute; bottom: 0; left: 15%;
+  display: inline-flex; width: fit-content;
+  z-index: 1; opacity: 0; transition: opacity 1.5s ease-in-out;
+  pointer-events: none; 
+}
+
+#p1 { height: 240px; object-fit: contain; }
+
+.flecha {
+  position: absolute; width: 60px; height: 60px; opacity: 0;
+  transition: opacity 0.4s ease, transform 0.15s ease, filter 0.4s ease;
+  z-index: 2; pointer-events: none;
+  bottom: calc(100% + 40px);
+  transform: translateX(-50%) translateY(20px);
+}
+
+.flecha.visible { opacity: 1; transform: translateX(-50%) translateY(0); filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)) drop-shadow(0 0 15px rgba(0,255,255,0.4)); }
+.flecha.activa { transform: translateX(-50%) translateY(0) scale(1.3); filter: drop-shadow(0 0 15px #fff) drop-shadow(0 0 30px #0ff); }
+
+/* Posiciones intercambiadas (Izquierda, Abajo, Arriba, Derecha) */
+#izquierda { left: calc(50% - 120px); }
+#arriba    { left: calc(50% + 40px);  }
+#abajo     { left: calc(50% - 40px);  }
+#derecha   { left: calc(50% + 120px); }
+
+#receptores-arriba {
+  position: absolute; top: 80px; left: 15%;
+  width: fit-content; height: 60px;
+  z-index: 5; opacity: 0; transition: opacity 0.5s ease;
+  pointer-events: none; 
+}
+
+.flecha-estatica {
+  position: absolute; width: 60px; height: 60px;
+  object-fit: contain; opacity: 0.6;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+  transform: translateX(-50%);
+}
+
+/* Posiciones intercambiadas (Izquierda, Abajo, Arriba, Derecha) */
+#rec-izquierda { left: calc(50% - 120px); }
+#rec-arriba    { left: calc(50% + 40px);  }
+#rec-abajo     { left: calc(50% - 40px);  }
+#rec-derecha   { left: calc(50% + 120px); }
+
+#izquierda2 {
+  position: fixed; width: 60px; height: 60px;
+  object-fit: contain; z-index: 20; display: none;
+  filter: drop-shadow(0 0 10px #ff00ff);
+  pointer-events: none; 
+  transform: translateX(-50%);
+}
+
+#miss-text {
+  position: absolute; top: 45%; left: 15%; 
+  transform: translateX(-50%);
+  font-size: 50px; font-weight: bold; color: #ff0000; 
+  text-shadow: 2px 2px 0px #000, -2px -2px 0px #000;
+  opacity: 0; z-index: 25; pointer-events: none; 
+  transition: opacity 0.1s, top 0.8s ease-out;
+}
+
+#miss-text.mostrar { opacity: 1; top: 35%; }
+
+#health-bar-container {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 30px; background: #ff0000; border: 3px solid white;
+  border-radius: 15px; overflow: hidden; z-index: 30; display: none;
+}
+
+#health-bar-fill {
+  position: absolute; right: 0; width: 50%; height: 100%;
+  background-color: #66ff33; transition: width 0.5s ease;
+  border-radius: 0 12px 12px 0;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.4);
+}
+
+.bar-label {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px black;
+  z-index: 2; pointer-events: none;
+}
+.bar-label.left { left: 20px; color: white; }
+.bar-label.right { right: 20px; color: black; }
+
+#contador, #video-fallo {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 40; display: none; pointer-events: none; 
+}
+
+/* ⬅️ ASEGURAMOS QUE EL VIDEO DE FALLO ESTE POR ENCIMA DE TODO (incluso de la z-index 40) */
+#video-fallo {
+  z-index: 100; 
+}
+
+#dialogo {
+  position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+  width: 80%; background: rgba(0,0,0,0.8); border: 2px solid white;
+  border-radius: 10px; padding: 20px; display: none; z-index: 10;
+}
+#nombre { font-weight: bold; margin-bottom: 10px; color: #00ffff; font-size: 22px; }
+#texto { font-size: 20px; min-height: 30px; }
+
+.nota-cayendo {
+  position: absolute; width: 60px; height: 60px; z-index: 4;
+  pointer-events: none; transform: translateX(-50%); object-fit: contain;
+}

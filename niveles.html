@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Niveles</title>
+  <link rel="stylesheet" href="niveles.css">
+</head>
+<body>
+
+  <!-- 👤 INFO DE USUARIO (superior derecha) -->
+  <div id="info-usuario" class="info-usuario-niveles">
+    <span id="nombre-usuario">🔒 Sin sesión</span>
+    <button id="btn-cerrar-sesion" class="btn-cerrar-sesion-niveles" onclick="cerrarSesion()">Cerrar Sesión</button>
+  </div>
+
+  <!-- Cuadrícula de niveles: Tutorial + 7 niveles -->
+  <div class="grid-niveles">
+    
+    <!-- 🔰 TUTORIAL - PRIMER BOTÓN -->
+    <button class="boton-nivel tutorial" id="nivel-tutorial">📚 TUTORIAL</button>
+    
+    <!-- NIVELES 1 AL 7 -->
+    <button class="boton-nivel" id="nivel-1">NIVEL 1</button>
+    <button class="boton-nivel" id="nivel-2">NIVEL 2</button>
+    <button class="boton-nivel" id="nivel-3">NIVEL 3</button>
+    <button class="boton-nivel" id="nivel-4">NIVEL 4</button>
+    <button class="boton-nivel" id="nivel-5">NIVEL 5</button>
+    <button class="boton-nivel" id="nivel-6">NIVEL 6</button>
+    <button class="boton-nivel" id="nivel-7">NIVEL 7</button>
+    
+  </div>
+
+  <!-- ⬅️ BOTÓN VOLVER (DEBAJO de los niveles) -->
+  <button id="btn-volver" class="btn-volver-abajo" onclick="volverAlMenu()">VOLVER</button>
+
+  <script src="niveles.js"></script>
+</body>
+</html>

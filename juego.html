@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Juego - Tutorial</title>
+<link rel="stylesheet" href="juego.css">
+</head>
+<body id="body">
+
+<img id="fondo" src="tutorial.jpg">
+<img id="p2" src="si.jpg">
+
+<div id="contenedor-p1">
+  <img id="p1" src="personaje1.jpg">
+  <img id="arriba" class="flecha" src="arriba.png">
+  <img id="abajo" class="flecha" src="abajo.png">
+  <img id="izquierda" class="flecha" src="izquierda.png">
+  <img id="derecha" class="flecha" src="derecha.png">
+</div>
+
+<div id="receptores-arriba">
+  <img id="rec-izquierda" class="flecha-estatica" src="izquierda.png">
+  <img id="rec-arriba" class="flecha-estatica" src="arriba.png">
+  <img id="rec-abajo" class="flecha-estatica" src="abajo.png">
+  <img id="rec-derecha" class="flecha-estatica" src="derecha.png">
+</div>
+
+<img id="izquierda2" src="izquierda2.png">
+<div id="miss-text">MISS</div>
+
+<div id="health-bar-container">
+  <div id="health-bar-fill"></div>
+  <span class="bar-label left">Rival</span>
+  <span class="bar-label right">Jugador</span>
+</div>
+
+<audio id="cancion" src="tuto.mp3"></audio>
+
+<video id="contador" playsinline>
+  <source src="contador.mp4" type="video/mp4">
+</video>
+
+<!-- VIDEO DE FALLO -->
+<video id="video-fallo" playsinline>
+  <source src="fallo.mp4" type="video/mp4">
+</video>
+
+<div id="dialogo">
+  <div id="nombre">???</div>
+  <div id="texto"></div>
+</div>
+
+<!-- ===================================
+     🔘 BOTÓN COMPLETAR TUTORIAL
+     (Aparece cuando ganas el tutorial)
+     =================================== -->
+<button id="btn-completar-tutorial" class="btn-completar-tutorial" onclick="completarEsteTutorial()">
+  ✅ Tutorial Completado - Continuar
+</button>
+
+<!-- 🔑 CARGAR niveles.js PARA GUARDAR PROGRESO -->
+<script src="niveles.js"></script>
+
+<!-- 🎮 SCRIPT DEL JUEGO -->
+<script src="script.js"></script>
+
+<!-- ===================================
+     💾 SCRIPT PARA COMPLETAR TUTORIAL
+     =================================== -->
+<script>
+// ===================================
+// ⚙️ CONFIGURACIÓN: Modifica estas variables
+// según cómo funcione tu juego
+// ===================================
+
+// ¿Cómo se gana tu tutorial?
+// Opción A: Por vida/health (cuando la vida del rival llega a 0)
+// Opción B: Por puntuación
+// Opción C: Manual con botón
+
+// Si tu script.js ya detecta cuándo gana, 
+// llama a mostrarBotonCompletar() desde ahí.
+
+function mostrarBotonCompletar() {
+  const btn = document.getElementById('btn-completar-tutorial');
+  if (btn) {
+    btn.style.display = 'block';
+    btn.classList.add('visible');
+    
+    // Efecto de aparición
+    setTimeout(() => {
+      btn.style.opacity = '1';
+      btn.style.transform = 'translateY(0)';
+    }, 100);
+  }
+}
+
+// ===================================
+// ✅ FUNCIÓN PRINCIPAL: Completar Tutorial
+// ===================================
+async function completarEsteTutorial() {
+  const btn = document.getElementById('btn-completar-tutorial');
+  
+  // Deshabilitar botón mientras procesa
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando...';
+  }
+
+  try {
+    // Llamar a la función de niveles.js para guardar progreso
+    const guardado = await completarNivel(0); // 0 = tutorial
+    
+    if (guardado) {
+      // Éxito: Redirigir a niveles después de ver el alerta
+      if (btn) {
+        btn.textContent = '✅ ¡Completado!';
+        btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc66)';
+      }
+      
+      // Redirigir después de 2 segundos (tiempo para leer el alerta)
+      setTimeout(() => {
+        window.location.href = 'niveles.html';
+      }, 2000);
+      
+    } else {
+      // Error guardando, pero igual redirigir
+      if (btn) {
+        btn.textContent = '⚠️ Error, continuar...';
+      }
+      setTimeout(() => {
+        window.location.href = 'niveles.html';
+      }, 1500);
+    }
+    
+  } catch (error) {
+    console.error('Error completando tutorial:', error);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✅ Tutorial Completado - Reintentar';
+    }
+  }
+}
+
+// ===================================
+// 🔄 DETECCIÓN AUTOMÁTICA DE VICTORIA
+// (Si tu juego usa health bar)
+// =================================== 
+
+// Monitorear la barra de vida del rival para detectar victoria automáticamente
+// Descomenta y ajusta si tu juego funciona así:
+
+/*
+let victoriaDetectada = false;
+
+function monitorearVictoria() {
+  const healthBar = document.getElementById('health-bar-fill');
+  
+  if (healthBar && !victoriaDetectada) {
+    // Ajusta esto según cómo funcione tu barra de vida
+    // Ejemplo: si width llega a 0% o un valor específico
+    const estilo = window.getComputedStyle(healthBar);
+    const ancho = parseFloat(estilo.width);
+    
+    // Si la vida del rival es 0 o muy baja → Victoria
+    if (ancho <= 5) { // Ajusta este valor
+      victoriaDetectada = true;
+      mostrarBotonCompletar();
+    }
+  }
+  
+  requestAnimationFrame(monitorearVictoria);
+}
+
+// Iniciar monitoreo (descomenta si lo necesitas)
+// monitorearVictoria();
+*/
+
+// ===================================
+// 📌 ALTERNATIVA: Llamar desde tu script.js
+// ===================================
+// 
+// Si en tu script.js ya tienes una función que detecta 
+// cuando el jugador GANA el tutorial, simplemente agrega 
+// esta línea ahí:
+//
+//   mostrarBotonCompletar();
+//
+// Ejemplo en script.js:
+//   function jugadorGana() {
+//     // ... tu código actual ...
+//     mostrarBotonCompletar(); // ← AGREGA ESTO
+//   }
+
+</script>
+
+<style>
+/* ===================================
+   🎨 ESTILOS DEL BOTÓN COMPLETAR TUTORIAL
+   =================================== */
+
+.btn-completar-tutorial {
+  /* Oculto por defecto */
+  display: none;
+  
+  position: fixed;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50px);
+  
+  padding: 20px 50px;
+  font-size: 22px;
+  font-weight: bold;
+  
+  background: linear-gradient(135deg, #00aaff, #0088cc);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  
+  box-shadow: 0 10px 30px rgba(0, 170, 255, 0.5);
+  z-index: 9999;
+  
+  opacity: 0;
+  transition: all 0.5s ease;
+  
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.btn-completar-tutorial.visible {
+  display: block;
+}
+
+.btn-completar-tutorial:hover:not(:disabled) {
+  transform: translate(-50%, 0) scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 170, 255, 0.7);
+  background: linear-gradient(135deg, #00ccff, #0099dd);
+}
+
+.btn-completar-tutorial:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Animación de pulso para atraer atención */
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 10px 30px rgba(0, 170, 255, 0.5); }
+  50% { box-shadow: 0 10px 50px rgba(0, 170, 255, 0.8), 0 0 60px rgba(0, 170, 255, 0.4); }
+}
+
+.btn-completar-tutorial.visible {
+  animation: pulse 2s infinite;
+}
+</style>
+
+</body>
+</html>
