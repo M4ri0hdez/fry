@@ -98,7 +98,8 @@ function spawnearNota(direccion) {
   const inicioY = rectReceptor.top + (rectReceptor.height / 2);
 
   const img = document.createElement('img');
-  img.src = direccion + '2.png'; 
+  // ✅ RUTA CORREGIDA: ../imagenes/ + direccion + 2.png
+  img.src = '../imagenes/' + direccion + '2.png';  
   img.className = 'nota-cayendo';
   img.style.display = "block";
   img.style.left = centroX + "px";
@@ -380,6 +381,39 @@ function reiniciarNivel() {
   } else {
     iniciarJuegoDirecto();
   }
+
+  // ⬅️ NUEVO: Detectar cuando termina tuto.mp3 (VICTORIA)
+if (audioCancion) {
+  audioCancion.addEventListener('ended', () => {
+    console.log("🎵 Canción terminada - Victoria del Tutorial");
+    
+    // Esperar un momento a que caigan las últimas notas
+    setTimeout(() => {
+      // Si todavía hay notas en pantalla, esperar más
+      if (notasEnPantalla.length > 0) {
+        console.log("⏳ Esperando que caigan las notas restantes...");
+        
+        // Verificar cada 100ms si ya cayeron todas
+        const verificarNotas = setInterval(() => {
+          if (notasEnPantalla.length === 0) {
+            clearInterval(verificarNotas);
+            manejarVictoriaTutorial();
+          }
+        }, 100);
+        
+        // Seguridad: máximo 5 segundos de espera
+        setTimeout(() => {
+          clearInterval(verificarNotas);
+          manejarVictoriaTutorial();
+        }, 5000);
+      } else {
+        // No hay notas, victoria inmediata
+        manejarVictoriaTutorial();
+      }
+    }, 500); // Espera 0.5 seg después de que termine el audio
+  });
+}
+
 }
 
 function iniciarJuegoDirecto() {
@@ -402,29 +436,88 @@ function iniciarJuegoDirecto() {
   bucleJuego(); 
 }
 
-if (videoContador) {
-  videoContador.addEventListener('ended', () => {
-    iniciarJuegoDirecto();
+// ===================================
+// 🎵 DETECTOR DE FIN DE CANCIÓN - VICTORIA AUTOMÁTICA
+// ===================================
+if (audioCancion) {
+  audioCancion.addEventListener('ended', () => {
+    console.log("🎵 tuto.mp3 TERMINADO - Iniciando secuencia de victoria...");
+    
+    // Esperar un momento para que caigan las últimas notas
+    setTimeout(() => {
+      if (notasEnPantalla.length > 0) {
+        console.log(`⏳ Quedan ${notasEnPantalla.length} notas en pantalla...`);
+        
+        // Verificar cada 100ms si ya cayeron todas
+        const verificarNotas = setInterval(() => {
+          if (notasEnPantalla.length === 0) {
+            clearInterval(verificarNotas);
+            console.log("✅ Todas las notas cayeron → Victoria");
+            manejarVictoriaTutorial();
+          }
+        }, 100);
+        
+        // Seguridad: máximo 5 segundos de espera
+        setTimeout(() => {
+          clearInterval(verificarNotas);
+          console.log("⏰ Tiempo límite → Victoria forzada");
+          manejarVictoriaTutorial();
+        }, 5000);
+      } else {
+        // No hay notas, victoria inmediata
+        console.log("✅ No hay notas → Victoria inmediata");
+        manejarVictoriaTutorial();
+      }
+    }, 500); // Espera 0.5 seg después de que termine el audio
   });
 }
 
-// ⬅️ NUEVA FUNCIÓN: Victoria del Tutorial
+// ⬅️ VICTORIA DEL TUTORIAL - 100% AUTOMÁTICA
 function manejarVictoriaTutorial() {
   bucleActivo = false;
+  
   if(audioCancion) {
     audioCancion.pause();
   }
   
-  estado = 50; // Nuevo estado para victoria
+  estado = 50; 
   
-  // Ocultar elementos del juego pero mantener fondo
+  // Ocultar elementos del juego
   if(healthBar) healthBar.style.display = "none";
   if(receptoresArriba) receptoresArriba.style.opacity = "0";
-  if(contenedorP1) contenedorP1.style.opacity = "0"; // Ocultar personaje para enfocar diálogo
+  if(contenedorP1) contenedorP1.style.opacity = "0";
   if(p2) p2.style.opacity = "0";
   
+  // Mostrar mensaje final brevemente
   dialogoBox.style.display = "block";
-  escribirTexto("......, supongo que.... bueno yo esperaba.... pasemos a los niveles");
+  escribirTexto("¡Tutorial completado!");
+  
+  console.log("🎮 Tutorial terminado - Guardando progreso...");
+  
+  // ⏱️ Esperar 2 segundos y luego guardar AUTOMÁTICAMENTE
+  setTimeout(() => {
+    dialogoBox.style.display = "none";
+    
+    // 📢 GUARDAR PROGRESO Y REDIRIGIR AUTOMÁTICAMENTE
+    if (typeof completarNivel === 'function') {
+      completarNivel(0).then((exito) => {
+        console.log("✅ Progreso guardado:", exito);
+        
+        // Redirigir automáticamente después de 1.5 seg (tiempo para ver alerta)
+        setTimeout(() => {
+          console.log("🔄 Redirigiendo a niveles...");
+          window.location.href = "niveles.html";
+        }, 1500);
+      }).catch(err => {
+        console.error("❌ Error guardando:", err);
+        window.location.href = "niveles.html";
+      });
+    } else {
+      // Si no existe la función, ir directo
+      console.log("⚠️ Función completarNivel no encontrada");
+      window.location.href = "niveles.html";
+    }
+  }, 2000); // 2 segundos mostrando mensaje
 }
 
 document.body.addEventListener("click", (e) => {
@@ -438,13 +531,23 @@ document.body.addEventListener("click", (e) => {
     return;
   }
 
-  // ⬅️ NUEVA LÓGICA: Click en estado de victoria
-  if (estado === 50) {
+// ⬅️ Click en estado de victoria (opcional - si quieren saltar la espera)
+if (estado === 50) {
+    // Click durante el mensaje de victoria
+    // Saltar espera y guardar ya
     dialogoBox.style.display = "none";
-    // Redirigir al menú
-    window.location.href = "niveles.html";
+    
+    if (typeof completarNivel === 'function') {
+      completarNivel(0).then(() => {
+        setTimeout(() => {
+          window.location.href = "niveles.html";
+        }, 1500);
+      });
+    } else {
+      window.location.href = "niveles.html";
+    }
     return;
-  }
+}
 
   if (estado === 9 || estado === 18 || estado === 21 || estado === 24 || estado === 25) return; 
 

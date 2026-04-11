@@ -1,5 +1,5 @@
 // ===================================
-// 🔐 SISTEMA DE NIVELES - VERSIÓN FINAL
+// 🔐 SISTEMA DE NIVELES - VERSIÓN FINAL CORREGIDA
 // ===================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,9 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`${API_URL}/progreso/${sesion.id}`);
         const data = await res.json();
         
-        if (data.exito) {
+        if (data.exito && data.nivelMaximo) {
           nivelMaximoDesbloqueado = data.nivelMaximo;
-          console.log(`👤 ${sesion.usuario} | Nivel máx: ${nivelMaximoDesbloqueado} (MongoDB)`);
+          console.log(`👤 ${sesion.usuario} | Nivel máx DESDE MONGODB: ${nivelMaximoDesbloqueado}`);
+        } else {
+          console.log('⚠️ Sin datos en MongoDB, usando nivel 1');
         }
       } catch (e) {
         console.error('❌ Error MongoDB:', e);
@@ -37,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (temp) {
         nivelMaximoDesbloqueado = parseInt(temp);
-        console.log(`🔒 Invitado | Nivel máx: ${nivelMaximoDesbloqueado} (temporal)`);
+        console.log(`🔒 Invitado | Nivel máx TEMPORAL: ${nivelMaximoDesbloqueado}`);
       } else {
         nivelMaximoDesbloqueado = 1;
         console.log('🔒 Invitado | Solo tutorial');
@@ -70,60 +72,62 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (esTutorial) {
-        // 🔰 Tutorial siempre desbloqueado
+        // 🔰 Tutorial SIEMPRE desbloqueado
         btn.className = 'boton-nivel tutorial unlocked';
         btn.onclick = () => window.location.href = url;
         
       } else if (numNivel < nivelMaximoDesbloqueado) {
-        // ✅ Desbloqueado (numNivel < nivelMaximoDesbloqueado)
+        // ✅ Desbloqueado si: numNivel < nivelMaximoDesbloqueado
+        // Ejemplo: nivelMaximo=2 → numNivel=1 está desbloqueado (1 < 2)
         btn.className = 'boton-nivel unlocked';
         btn.onclick = () => window.location.href = url;
+        console.log(`  ✅ Nivel ${numNivel} DESBLOQUEADO`);
         
       } else {
         // 🔒 Bloqueado
         btn.className = 'boton-nivel locked';
         btn.onclick = null;
+        console.log(`  🔒 Nivel ${numNivel} BLOQUEADO`);
       }
     });
 
-    // Botón volver abajo
-    const btnVolver = document.getElementById('btn-volver');
-    if (btnVolver) {
-      btnVolver.onclick = volverAlMenu;
-    }
-  }
-
-  // ===================================
-  // 👤 INFO DE USUARIO
-  // ===================================
-  function mostrarUsuario() {
-    const nombreEl = document.getElementById('nombre-usuario');
-    const btnCerrar = document.getElementById('btn-cerrar-sesion');
-
-    if (haySesion) {
-      nombreEl.textContent = `👤 ${sesion.usuario}`;
-      btnCerrar.style.display = 'inline-block';
-    } else {
-      nombreEl.textContent = '🔒 Modo Invitado';
-      btnCerrar.style.display = 'none';
-    }
+    console.log(`\n📊 RESUMEN:`);
+    console.log(`   nivelMaximoDesbloqueado = ${nivelMaximoDesbloqueado}`);
+    console.log(`   Regla: Nivel N está desbloqueado si N < ${nivelMaximoDesbloqueado}`);
   }
 
   // Iniciar todo
-  mostrarUsuario();
   cargarProgreso();
 });
 
 // ===================================
-// ⬅️ VOLVER AL MENÚ
+// 👤 INFO DE USUARIO
 // ===================================
+function cargarInfoUsuario() {
+  const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
+  const nombreEl = document.getElementById('nombre-usuario');
+  const btnCerrar = document.getElementById('btn-cerrar-sesion');
+
+  if (sesion && sesion.loggedIn) {
+    nombreEl.textContent = `👤 ${sesion.usuario}`;
+    btnCerrar.style.display = 'inline-block';
+  } else {
+    nombreEl.textContent = '🔒 Modo Invitado';
+    btnCerrar.style.display = 'none';
+  }
+}
+
+// Llamar al cargar
+document.addEventListener("DOMContentLoaded", () => {
+  cargarInfoUsuario();
+});
+
+// ⬅️ VOLVER AL MENÚ
 function volverAlMenu() {
   window.location.href = "index.html";
 }
 
-// ===================================
 // 🔒 CERRAR SESIÓN
-// ===================================
 function cerrarSesion() {
   if (confirm('¿Cerrar sesión?')) {
     localStorage.removeItem('juego_sesion');
@@ -143,9 +147,12 @@ async function completarNivel(nivelCompletado) {
   const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
   const tieneSesion = sesion && sesion.loggedIn === true;
 
+  console.log(`\n💾 Intentando guardar: ${nombreNivel}`);
+  console.log(`   siguiente = ${siguiente}`);
+
   if (tieneSesion) {
     // ===================================
-    // ✅ CON SESIÓN → MongoDB
+    // ✅ CON SESIÓN → Guardar en MongoDB
     // ===================================
     try {
       const res = await fetch(`http://localhost:3000/api/progreso/${sesion.id}`, {
@@ -157,14 +164,21 @@ async function completarNivel(nivelCompletado) {
       const data = await res.json();
       
       if (data.exito) {
+        console.log(`✅✅✅ GUARDADO EN MONGODB: ${data.mensaje}`);
+        if (data.nuevoNivelMaximo) {
+          console.log(`   Nuevo nivel máximo: ${data.nuevoNivelMaximo}`);
+        }
+        
         alert(`🎉 ¡${nombreNivel} completado!\n✨ ${nombreSig} desbloqueado.\n💾 Guardado en tu cuenta.`);
         return true;
       } else {
+        console.error('❌ Error del servidor:', data.mensaje);
         alert('❌ Error al guardar.');
         return false;
       }
     } catch (e) {
-      alert('❌ Error de conexión.');
+      console.error('❌ Error de conexión:', e);
+      alert('❌ Error de conexión. Progreso no guardado.');
       return false;
     }
 
@@ -173,14 +187,14 @@ async function completarNivel(nivelCompletado) {
     // 🔒 MODO INVITADO → sessionStorage
     // ===================================
     
-    // Leer actual
     let actual = parseInt(sessionStorage.getItem('invitado_nivel')) || 1;
     
-    // Actualizar si es mayor
     if (siguiente > actual) {
       actual = siguiente;
       sessionStorage.setItem('invitado_nivel', actual);
-      console.log(`💾 Guardado temporal: Nivel máx = ${actual}`);
+      console.log(`✅ GUARDADO TEMPORALMENTE: invitado_nivel = ${actual}`);
+    } else {
+      console.log(`   Ya estaba en nivel ${actual}, no se actualiza`);
     }
 
     alert(`🎉 ¡${nombreNivel} completado!\n✨ ${nombreSig} desbloqueado.\n\n⚠️ Se perderá al cerrar la pestaña.`);
@@ -188,9 +202,7 @@ async function completarNivel(nivelCompletado) {
   }
 }
 
-// ===================================
-// 📚 COMPLETAR TUTORIAL (función helper)
-// ===================================
+// Función helper
 async function completarTutorial() {
-  return await completarNivel(0); // 0 = tutorial
+  return await completarNivel(0);
 }

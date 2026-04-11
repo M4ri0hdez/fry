@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Juego - Tutorial</title>
+<link rel="stylesheet" href="juego.css">
+</head>
+<body id="body">
+
+<!-- RUTAS ACTUALIZADAS: ../imagenes/ -->
+<img id="fondo" src="../imagenes/tutorial.jpg">
+<img id="p2" src="../imagenes/si.jpg">
+
+<div id="contenedor-p1">
+  <img id="p1" src="../imagenes/personaje1.jpg">
+  <img id="arriba" class="flecha" src="../imagenes/arriba.png">
+  <img id="abajo" class="flecha" src="../imagenes/abajo.png">
+  <img id="izquierda" class="flecha" src="../imagenes/izquierda.png">
+  <img id="derecha" class="flecha" src="../imagenes/derecha.png">
+</div>
+
+<div id="receptores-arriba">
+  <img id="rec-izquierda" class="flecha-estatica" src="../imagenes/izquierda.png">
+  <img id="rec-arriba" class="flecha-estatica" src="../imagenes/arriba.png">
+  <img id="rec-abajo" class="flecha-estatica" src="../imagenes/abajo.png">
+  <img id="rec-derecha" class="flecha-estatica" src="../imagenes/derecha.png">
+</div>
+
+<img id="izquierda2" src="../imagenes/izquierda2.png">
+<div id="miss-text">MISS</div>
+
+<div id="health-bar-container">
+  <div id="health-bar-fill"></div>
+  <span class="bar-label left">Rival</span>
+  <span class="bar-label right">Jugador</span>
+</div>
+
+<!-- RUTA ACTUALIZADA: ../media/tuto.mp3 -->
+<audio id="cancion" src="../media/tuto.mp3"></audio>
+
+<!-- RUTA ACTUALIZADA: ../media/contador.mp4 -->
+<video id="contador" playsinline>
+  <source src="../media/contador.mp4" type="video/mp4">
+</video>
+
+<!-- RUTA ACTUALIZADA: ../media/fallo.mp4 -->
+<video id="video-fallo" playsinline>
+  <source src="../media/fallo.mp4" type="video/mp4">
+</video>
+
+<div id="dialogo">
+  <div id="nombre">???</div>
+  <div id="texto"></div>
+</div>
+
+<!-- ❌ ELIMINADO: Botón de completar tutorial (ya no es necesario) -->
+
+<!-- 🔑 CARGAR niveles.js PARA GUARDAR PROGRESO -->
+<script src="niveles.js"></script>
+
+<!-- 🎮 SCRIPT DEL JUEGO -->
+<script src="script.js"></script>
+
+</body>
+</html>
