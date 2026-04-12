@@ -1,0 +1,18 @@
+Juego tipo ritmo con flechas.
+
+Funcionamiento:
+- Aparecen flechas en pantalla.
+- El jugador debe presionar la tecla correcta en el momento indicado.
+- Si acierta:
+  - Gana puntos.
+  - Recupera vida.
+- Si falla:
+  - Pierde vida.
+
+Objetivo:
+- Mantener la vida y conseguir la mayor puntuación posible.
+
+Mecánicas:
+- Sistema de timing (precisión).
+- Barra de vida.
+- Feedback visual al acertar o fallar.
