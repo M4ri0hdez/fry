@@ -1,3 +1,8 @@
+// ===================================
+// 🔐 SERVIDOR FRY API - VERSIÓN 100% CORREGIDA
+// Estructura BD: {usuario, contraseña, nivel}
+// ===================================
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,13 +13,13 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*', // Permitir todos los orígenes (cambiar en producción)
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());
 
 // ===================================
-// 🔗 MODELO MONGODB - USUARIO
+// 🔗 MODELO MONGODB - USUARIO (CORREGIDO)
 // ===================================
 const usuarioSchema = new mongoose.Schema({
   usuario: {
@@ -23,17 +28,13 @@ const usuarioSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
-  password: {
+  contraseña: {           // ✅ Campo correcto
     type: String,
     required: true
   },
-  nivelMaximo: {
+  nivel: {                // ✅ Campo correcto
     type: Number,
     default: 1
-  },
-  fechaCreacion: {
-    type: Date,
-    default: Date.now
   }
 });
 
@@ -50,7 +51,10 @@ if (!MONGO_URI) {
 }
 
 mongoose.connect(MONGO_URI)
-  .then(() => console.log('✅ Conectado a MongoDB'))
+  .then(() => {
+    console.log('✅ Conectado a MongoDB');
+    console.log(`📦 Base de datos: ${mongoose.connection.name}`);
+  })
   .catch(err => {
     console.error('❌ Error conectando a MongoDB:', err);
     process.exit(1);
@@ -65,7 +69,8 @@ app.post('/api/registro', async (req, res) => {
   try {
     const { usuario, password } = req.body;
 
-    // Validar datos
+    console.log(`📥 Intento de registro: ${usuario}`);
+
     if (!usuario || !password) {
       return res.status(400).json({ 
         exito: false, 
@@ -73,7 +78,6 @@ app.post('/api/registro', async (req, res) => {
       });
     }
 
-    // Verificar si ya existe el usuario
     const existe = await Usuario.findOne({ 
       usuario: usuario.toLowerCase() 
     });
@@ -85,20 +89,19 @@ app.post('/api/registro', async (req, res) => {
       });
     }
 
-    // Encriptar contraseña
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear nuevo usuario
+    // ✅ CORRECTO: Usa nombres de campos de tu BD
     const nuevoUsuario = new Usuario({
       usuario: usuario.toLowerCase(),
-      password: passwordHash,
-      nivelMaximo: 1
+      contraseña: passwordHash,   // ✅ Campo: contraseña
+      nivel: 1                    // ✅ Campo: nivel
     });
 
     await nuevoUsuario.save();
 
-    console.log(`🆕 Nuevo usuario registrado: ${usuario}`);
+    console.log(`🆕 Usuario registrado: ${usuario}`);
 
     res.status(201).json({ 
       exito: true, 
@@ -119,7 +122,6 @@ app.post('/api/login', async (req, res) => {
   try {
     const { usuario, password } = req.body;
 
-    // Validar datos
     if (!usuario || !password) {
       return res.status(400).json({ 
         exito: false, 
@@ -127,7 +129,6 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    // Buscar usuario
     const userFound = await Usuario.findOne({ 
       usuario: usuario.toLowerCase() 
     });
@@ -139,8 +140,8 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    // Verificar contraseña
-    const passwordValida = await bcrypt.compare(password, userFound.password);
+    // ✅ CORRECTO: Compara con campo 'contraseña'
+    const passwordValida = await bcrypt.compare(password, userFound.contraseña);
 
     if (!passwordValida) {
       return res.status(400).json({ 
@@ -149,16 +150,16 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    console.log(`🔑 Usuario inició sesión: ${usuario}`);
+    console.log(`🔑 Login exitoso: ${usuario} (Nivel: ${userFound.nivel})`);
 
-    // Devolver datos del usuario (sin la contraseña)
+    // ✅✅✅ CORREGIDO: Ahora devuelve 'nivel' en vez de 'nivelMaximo'
     res.json({
       exito: true,
       mensaje: 'Login correcto',
       usuario: {
         id: userFound._id.toString(),
         usuario: userFound.usuario,
-        nivelMaximo: userFound.nivelMaximo
+        nivel: userFound.nivel          // ✅✅✅ CAMBIADO: era 'nivelMaximo'
       }
     });
 
@@ -174,7 +175,8 @@ app.post('/api/login', async (req, res) => {
 // 📊 OBTENER PROGRESO DEL USUARIO
 app.get('/api/progreso/:id', async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.params.id).select('-password');
+    // ✅✅✅ CORREGIDO: Excluye 'contraseña' en vez de 'password'
+    const usuario = await Usuario.findById(req.params.id).select('-contraseña');
 
     if (!usuario) {
       return res.status(404).json({ 
@@ -183,9 +185,10 @@ app.get('/api/progreso/:id', async (req, res) => {
       });
     }
 
+    // ✅ CORRECTO: Devuelve 'nivel'
     res.json({
       exito: true,
-      nivelMaximo: usuario.nivelMaximo
+      nivel: usuario.nivel
     });
 
   } catch (error) {
@@ -219,17 +222,17 @@ app.post('/api/progreso/:id', async (req, res) => {
       });
     }
 
-    // Solo actualizar si el nuevo nivel es mayor al actual
-    if (siguienteNivel > usuario.nivelMaximo) {
-      usuario.nivelMaximo = siguienteNivel;
+    // ✅ CORRECTO: Actualiza campo 'nivel'
+    if (siguienteNivel > usuario.nivel) {
+      usuario.nivel = siguienteNivel;
       await usuario.save();
       
-      console.log(`🎮 ${usuario.usuario} completó nivel ${nivelCompletado} → Nivel ${siguienteNivel} desbloqueado`);
+      console.log(`🎮 ${usuario.usuario}: Nivel ${nivelCompletado} completado → Nivel ${siguienteNivel}`);
       
       res.json({
         exito: true,
         mensaje: `¡Nivel ${siguienteNivel} desbloqueado!`,
-        nuevoNivelMaximo: siguienteNivel
+        nuevoNivel: siguienteNivel
       });
     } else {
       res.json({
@@ -256,7 +259,8 @@ app.get('/api/verificar-sesion', async (req, res) => {
       return res.json({ exito: false });
     }
 
-    const usuario = await Usuario.findById(userId).select('-password');
+    // ✅✅✅ CORREGIDO: Excluye 'contraseña' en vez de 'password'
+    const usuario = await Usuario.findById(userId).select('-contraseña');
     
     if (usuario) {
       res.json({
@@ -264,7 +268,7 @@ app.get('/api/verificar-sesion', async (req, res) => {
         usuario: {
           id: usuario._id.toString(),
           usuario: usuario.usuario,
-          nivelMaximo: usuario.nivelMaximo
+          nivel: usuario.nivel          // ✅ CORRECTO
         }
       });
     } else {

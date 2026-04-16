@@ -22,8 +22,6 @@
   <div id="menu">
     <button onclick="iniciar()">Jugar</button>
     <button onclick="irASesion()">Sesión</button>
-    <!-- 🚪 SALIR ahora cierra la página -->
-    <button onclick="salirJuego()">Salir</button>
   </div>
 
   <script>
@@ -97,20 +95,6 @@
     // 🔑 IR A SESIÓN
     function irASesion() {
       window.location.href = "sesion.html";
-    }
-
-    // 🚪 CERRAR PÁGINA (Salir del juego)
-    function salirJuego() {
-      if (confirm('¿Seguro que quieres salir del juego?')) {
-        // Cerrar la pestaña/ventana del navegador
-        window.close();
-        
-        // Si window.close() no funciona (la mayoría de navegadores lo bloquean),
-        // mostrar mensaje alternativo
-        setTimeout(() => {
-          alert('Puedes cerrar esta pestaña manualmente.\n\nGracias por jugar! 🎮');
-        }, 100);
-      }
     }
 
     // 🔒 CERRAR SESIÓN

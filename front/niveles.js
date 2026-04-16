@@ -1,16 +1,34 @@
 // ===================================
-// 🔐 SISTEMA DE NIVELES - VERSIÓN FINAL CORREGIDA
+// 🔐 SISTEMA DE NIVELES - VERSIÓN COMPATIBLE LOCALHOST + NGROK
 // ===================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const API_URL = 'http://localhost:3000/api';
+  // ===================================
+  // 🌐 DETECCIÓN AUTOMÁTICA DEL ENTORNO
+  // ===================================
   
-  // Verificar sesión
+  // Detecta si estás en localhost o en ngrok/internet
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+  
+  // 🔧 CONFIGURACIÓN DE LA URL DEL BACKEND PARA NGROK:
+  //    Cada vez que reinicies ngrok, esta URL CAMBIARÁ.
+  //    Actualiza solo esta línea con la nueva URL del backend.
+  const NGROK_BACKEND_URL = 'https://XXXX-XXX-XXX-XXX.ngrok-free.dev';
+  
+  // Selecciona automáticamente la URL correcta
+  const API_URL = isLocalhost 
+    ? 'http://localhost:3000/api'           // Desarrollo local
+    : `${NGROK_BACKEND_URL}/api`;         // Producción (ngrok)
+  
+  console.log(`🌐 Ambiente detectado: ${isLocalhost ? 'LOCALHOST' : 'NGROK/INTERNET'}`);
+  console.log(`🔗 API URL: ${API_URL}`);
+  
   const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
   const haySesion = sesion && sesion.loggedIn === true;
 
-  let nivelMaximoDesbloqueado = 1; // Por defecto: solo tutorial
+  let nivelMaximoDesbloqueado;
 
   // ===================================
   // 📥 CARGAR PROGRESO AL INICIAR
@@ -18,40 +36,37 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarProgreso() {
     
     if (haySesion) {
-      // ✅ CON SESIÓN: Cargar de MongoDB
+      // ✅ USUARIO REGISTRADO → Cargar de MongoDB
       try {
         const res = await fetch(`${API_URL}/progreso/${sesion.id}`);
         const data = await res.json();
         
-        if (data.exito && data.nivelMaximo) {
-          nivelMaximoDesbloqueado = data.nivelMaximo;
-          console.log(`👤 ${sesion.usuario} | Nivel máx DESDE MONGODB: ${nivelMaximoDesbloqueado}`);
+        if (data.exito && data.nivel) {
+          nivelMaximoDesbloqueado = data.nivel;
         } else {
-          console.log('⚠️ Sin datos en MongoDB, usando nivel 1');
+          nivelMaximoDesbloqueado = 1;
         }
       } catch (e) {
-        console.error('❌ Error MongoDB:', e);
+        console.error('❌ Error:', e);
+        nivelMaximoDesbloqueado = 1;
       }
       
     } else {
-      // 🔒 MODO INVITADO: Leer sessionStorage
+      // 🔒 INVITADO → Leer sessionStorage (TEMPORAL por sesión de navegador)
       let temp = sessionStorage.getItem('invitado_nivel');
       
       if (temp) {
         nivelMaximoDesbloqueado = parseInt(temp);
-        console.log(`🔒 Invitado | Nivel máx TEMPORAL: ${nivelMaximoDesbloqueado}`);
+        console.log(`🔒 Invitado | sessionStorage: ${nivelMaximoDesbloqueado}`);
       } else {
-        nivelMaximoDesbloqueado = 1;
-        console.log('🔒 Invitado | Solo tutorial');
+        nivelMaximoDesbloqueado = 0; // Solo Tutorial
+        console.log(`🔒 Invitado | Sin datos | Empieza: ${nivelMaximoDesbloqueado}`);
       }
     }
 
     aplicarNiveles();
   }
 
-  // ===================================
-  // 🎮 APLICAR ESTADOS A BOTONES
-  // ===================================
   function aplicarNiveles() {
     const botones = document.querySelectorAll('.boton-nivel');
 
@@ -66,47 +81,34 @@ document.addEventListener("DOMContentLoaded", () => {
         url = `nivel${numNivel}.html`;
       }
 
-      // Envolver texto
       if (!btn.querySelector('span')) {
         btn.innerHTML = `<span>${btn.innerText}</span>`;
       }
 
       if (esTutorial) {
-        // 🔰 Tutorial SIEMPRE desbloqueado
         btn.className = 'boton-nivel tutorial unlocked';
         btn.onclick = () => window.location.href = url;
         
-      } else if (numNivel < nivelMaximoDesbloqueado) {
-        // ✅ Desbloqueado si: numNivel < nivelMaximoDesbloqueado
-        // Ejemplo: nivelMaximo=2 → numNivel=1 está desbloqueado (1 < 2)
+      } else if (numNivel <= nivelMaximoDesbloqueado) {
         btn.className = 'boton-nivel unlocked';
         btn.onclick = () => window.location.href = url;
-        console.log(`  ✅ Nivel ${numNivel} DESBLOQUEADO`);
         
       } else {
-        // 🔒 Bloqueado
         btn.className = 'boton-nivel locked';
         btn.onclick = null;
-        console.log(`  🔒 Nivel ${numNivel} BLOQUEADO`);
       }
     });
-
-    console.log(`\n📊 RESUMEN:`);
-    console.log(`   nivelMaximoDesbloqueado = ${nivelMaximoDesbloqueado}`);
-    console.log(`   Regla: Nivel N está desbloqueado si N < ${nivelMaximoDesbloqueado}`);
   }
 
-  // Iniciar todo
   cargarProgreso();
 });
 
-// ===================================
-// 👤 INFO DE USUARIO
-// ===================================
 function cargarInfoUsuario() {
   const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
   const nombreEl = document.getElementById('nombre-usuario');
   const btnCerrar = document.getElementById('btn-cerrar-sesion');
+
+  if (!nombreEl || !btnCerrar) return;
 
   if (sesion && sesion.loggedIn) {
     nombreEl.textContent = `👤 ${sesion.usuario}`;
@@ -117,17 +119,14 @@ function cargarInfoUsuario() {
   }
 }
 
-// Llamar al cargar
 document.addEventListener("DOMContentLoaded", () => {
   cargarInfoUsuario();
 });
 
-// ⬅️ VOLVER AL MENÚ
 function volverAlMenu() {
   window.location.href = "index.html";
 }
 
-// 🔒 CERRAR SESIÓN
 function cerrarSesion() {
   if (confirm('¿Cerrar sesión?')) {
     localStorage.removeItem('juego_sesion');
@@ -135,9 +134,6 @@ function cerrarSesion() {
   }
 }
 
-// ===================================
-// 💾 GUARDAR PROGRESO - FUNCIÓN PRINCIPAL
-// ===================================
 async function completarNivel(nivelCompletado) {
   
   const siguiente = nivelCompletado + 1;
@@ -147,15 +143,16 @@ async function completarNivel(nivelCompletado) {
   const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
   const tieneSesion = sesion && sesion.loggedIn === true;
 
-  console.log(`\n💾 Intentando guardar: ${nombreNivel}`);
-  console.log(`   siguiente = ${siguiente}`);
+  // 🔗 OBTENER LA URL DE LA API (misma lógica de detección automática)
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+  const NGROK_BACKEND_URL = 'https://XXXX-XXX-XXX-XXX.ngrok-free.dev'; // ← ACTUALIZA ESTO
+  const API_URL = isLocalhost ? 'http://localhost:3000/api' : `${NGROK_BACKEND_URL}/api`;
 
   if (tieneSesion) {
-    // ===================================
-    // ✅ CON SESIÓN → Guardar en MongoDB
-    // ===================================
+    // ✅ REGISTRADO → MongoDB
     try {
-      const res = await fetch(`http://localhost:3000/api/progreso/${sesion.id}`, {
+      const res = await fetch(`${API_URL}/progreso/${sesion.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nivelCompletado })
@@ -164,45 +161,33 @@ async function completarNivel(nivelCompletado) {
       const data = await res.json();
       
       if (data.exito) {
-        console.log(`✅✅✅ GUARDADO EN MONGODB: ${data.mensaje}`);
-        if (data.nuevoNivelMaximo) {
-          console.log(`   Nuevo nivel máximo: ${data.nuevoNivelMaximo}`);
-        }
-        
-        alert(`🎉 ¡${nombreNivel} completado!\n✨ ${nombreSig} desbloqueado.\n💾 Guardado en tu cuenta.`);
+        alert(`🎉 ¡${nombreNivel}!\n✨ ${nombreSig} desbloqueado.\n💾 PERMANENTE`);
         return true;
       } else {
-        console.error('❌ Error del servidor:', data.mensaje);
-        alert('❌ Error al guardar.');
+        alert('❌ Error');
         return false;
       }
     } catch (e) {
-      console.error('❌ Error de conexión:', e);
-      alert('❌ Error de conexión. Progreso no guardado.');
+      alert('❌ Conexión');
       return false;
     }
 
   } else {
-    // ===================================
-    // 🔒 MODO INVITADO → sessionStorage
-    // ===================================
+    // 🔒 INVITADO → Guardar en sessionStorage (TEMPORAL)
     
-    let actual = parseInt(sessionStorage.getItem('invitado_nivel')) || 1;
+    let actual = parseInt(sessionStorage.getItem('invitado_nivel')) || 0;
     
     if (siguiente > actual) {
       actual = siguiente;
       sessionStorage.setItem('invitado_nivel', actual);
-      console.log(`✅ GUARDADO TEMPORALMENTE: invitado_nivel = ${actual}`);
-    } else {
-      console.log(`   Ya estaba en nivel ${actual}, no se actualiza`);
+      console.log(`💾 Guardado en sessionStorage: ${actual}`);
     }
-
-    alert(`🎉 ¡${nombreNivel} completado!\n✨ ${nombreSig} desbloqueado.\n\n⚠️ Se perderá al cerrar la pestaña.`);
+    
+    alert(`🎉 ¡${nombreNivel}!\n✨ ${nombreSig} desbloqueado.\n\n⚠️ TEMPORAL:\nSe pierde al cerrar pestaña/navegador`);
     return true;
   }
 }
 
-// Función helper
 async function completarTutorial() {
   return await completarNivel(0);
 }

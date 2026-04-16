@@ -1,6 +1,10 @@
+// ===================================
+// 🎮 TUTORIAL DEL JUEGO - VERSIÓN CON ANIMACIONES DE JUGADOR
+// ===================================
+
 const fondo = document.getElementById("fondo");
 const contenedorP1 = document.getElementById("contenedor-p1"); 
-const p2 = document.getElementById("p2");
+// ❌ ELIMINADO: const p2 = document.getElementById("p2");
 const dialogoBox = document.getElementById("dialogo");
 const textoElem = document.getElementById("texto");
 const receptoresArriba = document.getElementById("receptores-arriba");
@@ -11,6 +15,9 @@ const healthFill = document.getElementById("health-bar-fill");
 const videoContador = document.getElementById("contador");
 const audioCancion = document.getElementById("cancion");
 const videoFallo = document.getElementById("video-fallo");
+
+// ✅ NUEVO: Referencia al personaje del jugador para animaciones
+const jugadorImg = document.getElementById("p1");
 
 let estado = 0;
 let escribiendo = false;
@@ -26,6 +33,53 @@ let posY = 0;
 const velocidad = 5;
 let fallos = 0;
 let vida = 50; 
+
+// ===================================
+// ✅ NUEVO: SISTEMA DE ANIMACIONES DEL JUGADOR
+// ===================================
+const imagenesJugador = {
+  'izquierda': '../imagenes/j_izquierda.png',
+  'derecha': '../imagenes/j_derecha.png',
+  'arriba': '../imagenes/j_arriba.png',    // Asumí que quieres j_arriba.png para arriba
+  'abajo': '../imagenes/j_abajo.png',
+  'default': '../imagenes/j_abajo.png'    // Imagen por defecto
+};
+
+let teclaPresionadaTimeout = null;
+
+// Función para cambiar la imagen del jugador
+function cambiarImagenJugador(direccion) {
+  if (!jugadorImg) return;
+  
+  const nuevaImagen = imagenesJugador[direccion] || imagenesJugador['default'];
+  jugadorImg.src = nuevaImagen;
+}
+
+// Función para volver a la imagen por defecto
+function restaurarImagenJugador() {
+  if (!jugadorImg) return;
+  jugadorImg.src = imagenesJugador['default'];
+}
+
+// ===================================
+// ✅ NUEVO: FUNCIÓN PARA DETECTAR SI HAY NOTA EN EL RECEPTOR
+// ===================================
+function hayNotaEnReceptor(dir) {
+  const objetivoY = document.getElementById(dir).getBoundingClientRect().top;
+  const margenError = 80;
+  
+  for (let i = 0; i < notasEnPantalla.length; i++) {
+    let nota = notasEnPantalla[i];
+    if (nota.dir === dir) {
+      const diferencia = Math.abs(nota.posY - objetivoY);
+      // Si hay una nota dentro del margen de error, retornar true
+      if (diferencia < margenError) {
+        return true;
+      }
+    }
+  }
+  return false; // No hay nota en el receptor
+}
 
 const dialogos = [
   "Bienvenido a esta experiencia...",
@@ -97,9 +151,8 @@ function spawnearNota(direccion) {
   const centroX = rectReceptor.left + (rectReceptor.width / 2);
   const inicioY = rectReceptor.top + (rectReceptor.height / 2);
 
-  const img = document.createElement('img');
-  // ✅ RUTA CORREGIDA: ../imagenes/ + direccion + 2.png
-  img.src = '../imagenes/' + direccion + '2.png';  
+   const img = document.createElement('img');
+  img.src = '../imagenes/' + direccion + '2.png';
   img.className = 'nota-cayendo';
   img.style.display = "block";
   img.style.left = centroX + "px";
@@ -157,15 +210,38 @@ function verificarAciertoCancion(tecla) {
     if (nota.dir === dir) {
       const diferencia = Math.abs(nota.posY - objetivoY);
       if (diferencia < margenError) {
+        // ✅ HIT CORRECTO
         document.getElementById(dir).classList.add('activa');
         setTimeout(() => document.getElementById(dir).classList.remove('activa'), 200);
+        
+        // ✅ NUEVO: Cambiar imagen del jugador según dirección
+        cambiarImagenJugador(dir);
+        
         subirVida();
         document.body.removeChild(nota.elemento);
         notasEnPantalla.splice(i, 1);
-        return; 
+        return true; // Retornar true indicando que hubo un hit
       }
     }
   }
+  return false; // No hubo hit
+}
+
+// ===================================
+// ✅ NUEVO: FUNCIÓN PARA MANEJAR TECLA PREMATURA (MISS)
+// ===================================
+function manejarTeclaPrematura(dir) {
+  // Mostrar MISS
+  missTexto.classList.add("mostrar");
+  setTimeout(() => missTexto.classList.remove("mostrar"), 800);
+  
+  // Bajar vida
+  bajarVida();
+  
+  // Cambiar imagen del jugador (aunque fue un miss)
+  cambiarImagenJugador(dir);
+  
+  console.log(`⚠️ Tecla prematura: ${dir} (MISS)`);
 }
 
 function escribirTexto(texto) {
@@ -186,35 +262,68 @@ function aparecerFlechas() {
   });
 }
 
-const mapaTeclas = { 'w': 'arriba', 'W': 'arriba', 'a': 'izquierda', 'A': 'izquierda', 's': 'abajo', 'S': 'abajo', 'd': 'derecha', 'D': 'derecha' };
+const mapaTeclas = { 
+  'w': 'arriba', 'W': 'arriba', 
+  'a': 'izquierda', 'A': 'izquierda', 
+  's': 'abajo', 'S': 'abajo', 
+  'd': 'derecha', 'D': 'derecha' 
+};
 
 document.addEventListener('keydown', (e) => {
-  if (escuchandoTeclado) {
-    const idFlecha = mapaTeclas[e.key];
+  // Evitar repetición de tecla mantenida
+  if (e.repeat) return;
+  
+  const idFlecha = mapaTeclas[e.key];
+  
+  if (escuchandoTeclado && idFlecha) {
+    const el = document.getElementById(idFlecha);
+    if(el) el.classList.add('activa');
+    
+    // ✅ NUEVO: Cambiar imagen del jugador durante práctica
+    cambiarImagenJugador(idFlecha);
+  }
+
+  // Estados donde se puede jugar
+  if (estado === 9 || estado === 18 || estado === 21 || estado === 25) {
     if (idFlecha) {
       const el = document.getElementById(idFlecha);
       if(el) el.classList.add('activa');
-    }
-  }
+      
+      // ✅ NUEVO: Cambiar imagen del jugador siempre que se presione una tecla
+      cambiarImagenJugador(idFlecha);
+      
+      if (estado === 9 && cayendo) {
+        if (e.key === 'a' || e.key === 'A') {
+          const notaRect = notaCayendo.getBoundingClientRect();
+          const objetivoRect = document.getElementById("izquierda").getBoundingClientRect(); 
+          if (Math.abs(notaRect.top - objetivoRect.top) < 80) { 
+            ejecutarHitOriginal(); 
+          } else { 
+            ejecutarMissOriginal(); 
+          }
+        }
+      }
 
-  if (estado === 9 && cayendo) {
-    if (e.key === 'a' || e.key === 'A') {
-      const notaRect = notaCayendo.getBoundingClientRect();
-      const objetivoRect = document.getElementById("izquierda").getBoundingClientRect(); 
-      if (Math.abs(notaRect.top - objetivoRect.top) < 80) { ejecutarHitOriginal(); } else { ejecutarMissOriginal(); }
-    }
-  }
+      if (estado === 21 && cayendo) {
+        if (e.key === 'a' || e.key === 'A') {
+          const notaRect = notaCayendo.getBoundingClientRect();
+          const objetivoRect = document.getElementById("izquierda").getBoundingClientRect(); 
+          if (Math.abs(notaRect.top - objetivoRect.top) < 80) { 
+            ejecutarHitEjemplo(); 
+          }
+        }
+      }
 
-  if (estado === 21 && cayendo) {
-    if (e.key === 'a' || e.key === 'A') {
-      const notaRect = notaCayendo.getBoundingClientRect();
-      const objetivoRect = document.getElementById("izquierda").getBoundingClientRect(); 
-      if (Math.abs(notaRect.top - objetivoRect.top) < 80) { ejecutarHitEjemplo(); }
+      // ✅ NUEVO: Durante la canción (estado 25), verificar si es tecla prematura
+      if (estado === 25) {
+        const huboHit = verificarAciertoCancion(e.key);
+        
+        // Si no hubo hit, significa que se presionó la tecla sin una nota en el receptor
+        if (!huboHit) {
+          manejarTeclaPrematura(idFlecha);
+        }
+      }
     }
-  }
-
-  if (estado === 25) {
-    verificarAciertoCancion(e.key);
   }
 });
 
@@ -223,6 +332,9 @@ document.addEventListener('keyup', (e) => {
   if (idFlecha) {
     const el = document.getElementById(idFlecha);
     if(el) el.classList.remove('activa');
+    
+    // ✅ NUEVO: Restaurar imagen por defecto cuando se suelta la tecla
+    restaurarImagenJugador();
   }
 });
 
@@ -263,6 +375,8 @@ function ejecutarHitOriginal() {
     el.classList.add('activa');
     setTimeout(() => el.classList.remove('activa'), 200);
   }
+  // ✅ NUEVO: Cambiar imagen del jugador
+  cambiarImagenJugador('izquierda');
   dialogoBox.style.display = "block"; escribirTexto("perfecto"); estado = 10; 
 }
 
@@ -293,7 +407,10 @@ function bajarVida() {
   }
 }
 
-function subirVida() { vida = Math.min(100, vida + 10); healthFill.style.width = vida + "%"; }
+function subirVida() { 
+  vida = Math.min(100, vida + 10); 
+  healthFill.style.width = vida + "%"; 
+}
 
 function ejecutarMissEjemplo1() {
   if (!cayendo) return;
@@ -309,6 +426,8 @@ function ejecutarHitEjemplo() {
     el.classList.add('activa');
     setTimeout(() => el.classList.remove('activa'), 200);
   }
+  // ✅ NUEVO: Cambiar imagen del jugador
+  cambiarImagenJugador('izquierda');
   subirVida(); estado = 22; 
 }
 
@@ -344,7 +463,7 @@ function manejarFallo() {
   
   if(fondo) fondo.style.opacity = "0";
   if(contenedorP1) contenedorP1.style.opacity = "0";
-  if(p2) p2.style.opacity = "0";
+  // ❌ ELIMINADO: if(p2) p2.style.opacity = "0";
 
   estado = 99;
 
@@ -372,6 +491,9 @@ function reiniciarNivel() {
   falloProcesado = false; 
   healthFill.style.width = "50%";
   
+  // ✅ NUEVO: Restaurar imagen del jugador al reiniciar
+  restaurarImagenJugador();
+  
   estado = 24; 
   
   if (videoContador) {
@@ -381,39 +503,6 @@ function reiniciarNivel() {
   } else {
     iniciarJuegoDirecto();
   }
-
-  // ⬅️ NUEVO: Detectar cuando termina tuto.mp3 (VICTORIA)
-if (audioCancion) {
-  audioCancion.addEventListener('ended', () => {
-    console.log("🎵 Canción terminada - Victoria del Tutorial");
-    
-    // Esperar un momento a que caigan las últimas notas
-    setTimeout(() => {
-      // Si todavía hay notas en pantalla, esperar más
-      if (notasEnPantalla.length > 0) {
-        console.log("⏳ Esperando que caigan las notas restantes...");
-        
-        // Verificar cada 100ms si ya cayeron todas
-        const verificarNotas = setInterval(() => {
-          if (notasEnPantalla.length === 0) {
-            clearInterval(verificarNotas);
-            manejarVictoriaTutorial();
-          }
-        }, 100);
-        
-        // Seguridad: máximo 5 segundos de espera
-        setTimeout(() => {
-          clearInterval(verificarNotas);
-          manejarVictoriaTutorial();
-        }, 5000);
-      } else {
-        // No hay notas, victoria inmediata
-        manejarVictoriaTutorial();
-      }
-    }, 500); // Espera 0.5 seg después de que termine el audio
-  });
-}
-
 }
 
 function iniciarJuegoDirecto() {
@@ -422,10 +511,13 @@ function iniciarJuegoDirecto() {
   if(receptoresArriba) receptoresArriba.style.opacity = "1";
   if(fondo) fondo.style.opacity = "1";
   if(contenedorP1) contenedorP1.style.opacity = "1";
-  if(p2) p2.style.opacity = "1";
+  // ❌ ELIMINADO: if(p2) p2.style.opacity = "1";
   
   // ⬅️ FIX: Asegurar que la barra de vida se muestre
   healthBar.style.display = "block";
+  
+  // ✅ NUEVO: Restaurar imagen del jugador al iniciar
+  restaurarImagenJugador();
   
   estado = 25; 
   bucleActivo = true; 
@@ -436,91 +528,72 @@ function iniciarJuegoDirecto() {
   bucleJuego(); 
 }
 
-// ===================================
-// 🎵 DETECTOR DE FIN DE CANCIÓN - VICTORIA AUTOMÁTICA
-// ===================================
-if (audioCancion) {
-  audioCancion.addEventListener('ended', () => {
-    console.log("🎵 tuto.mp3 TERMINADO - Iniciando secuencia de victoria...");
-    
-    // Esperar un momento para que caigan las últimas notas
-    setTimeout(() => {
-      if (notasEnPantalla.length > 0) {
-        console.log(`⏳ Quedan ${notasEnPantalla.length} notas en pantalla...`);
-        
-        // Verificar cada 100ms si ya cayeron todas
-        const verificarNotas = setInterval(() => {
-          if (notasEnPantalla.length === 0) {
-            clearInterval(verificarNotas);
-            console.log("✅ Todas las notas cayeron → Victoria");
-            manejarVictoriaTutorial();
-          }
-        }, 100);
-        
-        // Seguridad: máximo 5 segundos de espera
-        setTimeout(() => {
-          clearInterval(verificarNotas);
-          console.log("⏰ Tiempo límite → Victoria forzada");
-          manejarVictoriaTutorial();
-        }, 5000);
-      } else {
-        // No hay notas, victoria inmediata
-        console.log("✅ No hay notas → Victoria inmediata");
-        manejarVictoriaTutorial();
-      }
-    }, 500); // Espera 0.5 seg después de que termine el audio
+if (videoContador) {
+  videoContador.addEventListener('ended', () => {
+    iniciarJuegoDirecto();
   });
 }
 
-// ⬅️ VICTORIA DEL TUTORIAL - 100% AUTOMÁTICA
-function manejarVictoriaTutorial() {
+// ===================================
+// ✅ FUNCIÓN VICTORIA TUTORIAL - INTEGRADA CON SISTEMA DE PROGRESO
+// ===================================
+async function manejarVictoriaTutorial() {
   bucleActivo = false;
-  
   if(audioCancion) {
     audioCancion.pause();
   }
   
-  estado = 50; 
+  estado = 50; // Nuevo estado para victoria
   
-  // Ocultar elementos del juego
+  // Ocultar elementos del juego pero mantener fondo
   if(healthBar) healthBar.style.display = "none";
   if(receptoresArriba) receptoresArriba.style.opacity = "0";
-  if(contenedorP1) contenedorP1.style.opacity = "0";
-  if(p2) p2.style.opacity = "0";
+  if(contenedorP1) contenedorP1.style.opacity = "0"; // Ocultar personaje para enfocar diálogo
+  // ❌ ELIMINADO: if(p2) p2.style.opacity = "0";
   
-  // Mostrar mensaje final brevemente
   dialogoBox.style.display = "block";
-  escribirTexto("¡Tutorial completado!");
+  escribirTexto("......, supongo que.... bueno yo esperaba.... pasemos a los niveles");
   
-  console.log("🎮 Tutorial terminado - Guardando progreso...");
+  // ⬅️ IMPORTANTE: Guardar progreso del tutorial
+  // Esperar un momento para que el usuario vea el mensaje
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // ⏱️ Esperar 2 segundos y luego guardar AUTOMÁTICAMENTE
-  setTimeout(() => {
-    dialogoBox.style.display = "none";
-    
-    // 📢 GUARDAR PROGRESO Y REDIRIGIR AUTOMÁTICAMENTE
+  // Intentar guardar usando la función del sistema de niveles
+  try {
+    // Verificar si existe la función completarNivel (de niveles.js)
     if (typeof completarNivel === 'function') {
-      completarNivel(0).then((exito) => {
-        console.log("✅ Progreso guardado:", exito);
-        
-        // Redirigir automáticamente después de 1.5 seg (tiempo para ver alerta)
-        setTimeout(() => {
-          console.log("🔄 Redirigiendo a niveles...");
-          window.location.href = "niveles.html";
-        }, 1500);
-      }).catch(err => {
-        console.error("❌ Error guardando:", err);
-        window.location.href = "niveles.html";
-      });
+      await completarNivel(0); // 0 = Tutorial completado
+      console.log("✅ Tutorial completado y guardado en el sistema");
     } else {
-      // Si no existe la función, ir directo
-      console.log("⚠️ Función completarNivel no encontrada");
-      window.location.href = "niveles.html";
+      // Fallback por si no se cargó niveles.js
+      console.warn("⚠️ completarNivel no disponible, usando localStorage temporal");
+      
+      const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
+      if (sesion && sesion.loggedIn) {
+        // Usuario con sesión - intentar guardar en servidor
+        try {
+          await fetch(`http://localhost:3000/api/progreso/${sesion.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nivelCompletado: 0 })
+          });
+        } catch (e) {
+          console.error("Error guardando en servidor:", e);
+        }
+      } else {
+        // Modo invitado - usar sessionStorage
+        let actual = parseInt(sessionStorage.getItem('invitado_nivel')) || 1;
+        if (1 > actual) {
+          sessionStorage.setItem('invitado_nivel', 1);
+        }
+      }
     }
-  }, 2000); // 2 segundos mostrando mensaje
+  } catch (error) {
+    console.error("Error al guardar progreso del tutorial:", error);
+  }
 }
 
-document.body.addEventListener("click", (e) => {
+document.body.addEventListener("click", async (e) => {
   if (estado === 99) {
     clearTimeout(temporizadorFallo); 
     if(videoFallo) {
@@ -531,23 +604,13 @@ document.body.addEventListener("click", (e) => {
     return;
   }
 
-// ⬅️ Click en estado de victoria (opcional - si quieren saltar la espera)
-if (estado === 50) {
-    // Click durante el mensaje de victoria
-    // Saltar espera y guardar ya
+  // ⬅️ Click en estado de victoria del tutorial
+  if (estado === 50) {
     dialogoBox.style.display = "none";
-    
-    if (typeof completarNivel === 'function') {
-      completarNivel(0).then(() => {
-        setTimeout(() => {
-          window.location.href = "niveles.html";
-        }, 1500);
-      });
-    } else {
-      window.location.href = "niveles.html";
-    }
+    // Redirigir al menú de niveles
+    window.location.href = "niveles.html";
     return;
-}
+  }
 
   if (estado === 9 || estado === 18 || estado === 21 || estado === 24 || estado === 25) return; 
 
@@ -559,7 +622,7 @@ if (estado === 50) {
     dialogoBox.style.display = "none"; 
     if(fondo) fondo.style.opacity = "1"; 
     if(contenedorP1) contenedorP1.style.opacity = "1"; 
-    if(p2) p2.style.opacity = "1";
+    // ❌ ELIMINADO: if(p2) p2.style.opacity = "1";
     estado = 3; return;
   }
   if (estado === 3) { dialogoBox.style.display = "block"; escribirTexto(dialogos[2]); estado = 4; return; }

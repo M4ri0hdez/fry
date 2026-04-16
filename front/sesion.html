@@ -1,58 +1,58 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Sesión</title>
-  <link rel="stylesheet" href="sesion.css">
-</head>
-<body>
+  <!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Sesión</title>
+    <link rel="stylesheet" href="sesion.css">
+  </head>
+  <body>
 
-  <div class="contenedor-sesion">
-    
-    <h1 class="titulo">🎮 MI CUENTA</h1>
+    <div class="contenedor-sesion">
+      
+      <h1 class="titulo">🎮 MI CUENTA</h1>
 
-    <!-- PESTAÑAS -->
-    <div class="pestanas">
-      <button class="pestana activa" id="tab-login" onclick="mostrarFormulario('login')">Iniciar Sesión</button>
-      <button class="pestana" id="tab-register" onclick="mostrarFormulario('register')">Crear Cuenta</button>
+      <!-- PESTAÑAS -->
+      <div class="pestanas">
+        <button class="pestana activa" id="tab-login" onclick="mostrarFormulario('login')">Iniciar Sesión</button>
+        <button class="pestana" id="tab-register" onclick="mostrarFormulario('register')">Crear Cuenta</button>
+      </div>
+
+      <!-- FORMULARIO LOGIN -->
+      <form id="form-login" class="formulario" onsubmit="iniciarSesion(event)">
+        <div class="campo">
+          <label for="login-user">👤 Usuario</label>
+          <input type="text" id="login-user" placeholder="Tu usuario" required>
+        </div>
+        <div class="campo">
+          <label for="login-pass">🔒 Contraseña</label>
+          <input type="password" id="login-pass" placeholder="Tu contraseña" required>
+        </div>
+        <button type="submit" class="btn-submit">Entrar</button>
+        <p id="msg-login" class="mensaje"></p>
+      </form>
+
+      <!-- FORMULARIO REGISTRO -->
+      <form id="form-register" class="formulario oculto" onsubmit="crearCuenta(event)">
+        <div class="campo">
+          <label for="reg-user">👤 Usuario</label>
+          <input type="text" id="reg-user" placeholder="Nuevo usuario" required>
+        </div>
+        <div class="campo">
+          <label for="reg-pass">🔒 Contraseña</label>
+          <input type="password" id="reg-pass" placeholder="Nueva contraseña" required>
+        </div>
+        <div class="campo">
+          <label for="reg-pass2">✅ Confirmar Contraseña</label>
+          <input type="password" id="reg-pass2" placeholder="Repite la contraseña" required>
+        </div>
+        <button type="submit" class="btn-submit">Crear Cuenta</button>
+        <p id="msg-register" class="mensaje"></p>
+      </form>
+
+      <button onclick="volver()" class="btn-volver">← Volver al Menú</button>
+
     </div>
 
-    <!-- FORMULARIO LOGIN -->
-    <form id="form-login" class="formulario" onsubmit="iniciarSesion(event)">
-      <div class="campo">
-        <label for="login-user">👤 Usuario</label>
-        <input type="text" id="login-user" placeholder="Tu usuario" required>
-      </div>
-      <div class="campo">
-        <label for="login-pass">🔒 Contraseña</label>
-        <input type="password" id="login-pass" placeholder="Tu contraseña" required>
-      </div>
-      <button type="submit" class="btn-submit">Entrar</button>
-      <p id="msg-login" class="mensaje"></p>
-    </form>
-
-    <!-- FORMULARIO REGISTRO -->
-    <form id="form-register" class="formulario oculto" onsubmit="crearCuenta(event)">
-      <div class="campo">
-        <label for="reg-user">👤 Usuario</label>
-        <input type="text" id="reg-user" placeholder="Nuevo usuario" required>
-      </div>
-      <div class="campo">
-        <label for="reg-pass">🔒 Contraseña</label>
-        <input type="password" id="reg-pass" placeholder="Nueva contraseña" required>
-      </div>
-      <div class="campo">
-        <label for="reg-pass2">✅ Confirmar Contraseña</label>
-        <input type="password" id="reg-pass2" placeholder="Repite la contraseña" required>
-      </div>
-      <button type="submit" class="btn-submit">Crear Cuenta</button>
-      <p id="msg-register" class="mensaje"></p>
-    </form>
-
-    <button onclick="volver()" class="btn-volver">← Volver al Menú</button>
-
-  </div>
-
-  <script src="sesion.js"></script>
-</body>
-</html>
+    <script src="sesion.js"></script>
+  </body>
+  </html>

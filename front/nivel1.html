@@ -8,10 +8,14 @@
 <body id="body">
 
 <img id="fondo" src="../imagenes/fondonivel1.jpg">
-<img id="p2" src="../imagenes/personaje2.jpg">
+
+<!-- ✅ CAMBIADO: Imagen base del bot es b1_derecha.png -->
+<img id="p2" src="../imagenes/b1_derecha.png">
 
 <div id="contenedor-p1">
-  <img id="p1" src="../imagenes/personaje1.jpg">
+  <!-- ✅ CAMBIADO: Imagen base del jugador es j_abajo.png -->
+  <img id="p1" src="../imagenes/j_abajo.png">
+  
   <img id="arriba" class="flecha" src="../imagenes/arriba.png">
   <img id="abajo" class="flecha" src="../imagenes/abajo.png">
   <img id="izquierda" class="flecha" src="../imagenes/izquierda.png">
@@ -50,6 +54,13 @@
   <div id="texto"></div>
 </div>
 
+<!-- ========================================== -->
+<!-- ✅ CORRECCIÓN: Cargar niveles.js PRIMERO   -->
+<!-- ========================================== -->
+<script src="niveles.js"></script>
+
+<!-- 🎮 SCRIPT DEL NIVEL 1 -->
 <script src="nivel1.js"></script>
+
 </body>
 </html>

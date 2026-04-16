@@ -10,11 +10,7 @@ body, html {
   pointer-events: none; 
 }
 
-#p2 {
-  position: absolute; bottom: 0; right: 50px; height: 240px;
-  z-index: 1; object-fit: contain; opacity: 0; transition: opacity 1.5s ease-in-out;
-  pointer-events: none; 
-}
+/* ❌ ELIMINADO: Estilos del bot P2 */
 
 #contenedor-p1 {
   position: absolute; bottom: 0; left: 15%;
@@ -23,7 +19,13 @@ body, html {
   pointer-events: none; 
 }
 
-#p1 { height: 240px; object-fit: contain; }
+/* ✅ MODIFICADO: Personaje ahora es el DOBLE de grande (480px) */
+#p1 { 
+  height: 370px;  /* ⬅️ CAMBIADO: Era 240px, ahora 480px */
+  width: auto;    /* ⬅️ AGREGADO: Para mantener proporción */
+  object-fit: contain; 
+  transition: opacity 0.1s ease; 
+}
 
 .flecha {
   position: absolute; width: 60px; height: 60px; opacity: 0;
@@ -106,11 +108,7 @@ body, html {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   object-fit: cover; z-index: 40; display: none; pointer-events: none; 
 }
-
-/* ⬅️ ASEGURAMOS QUE EL VIDEO DE FALLO ESTE POR ENCIMA DE TODO (incluso de la z-index 40) */
-#video-fallo {
-  z-index: 100; 
-}
+#video-fallo { z-index: 100; }
 
 #dialogo {
   position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);

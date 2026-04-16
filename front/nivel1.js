@@ -248,7 +248,7 @@ const datosCancion = {
         "sectionNotes": [
           [57500, 4, 0], [57500, 0, 33], [57667, 7, 0], [57667, 3, 33],
           [57833, 5, 0], [57833, 1, 33], [58000, 6, 0], [58000, 2, 33],
-          [58167, 4, 0], [58167, 0, 1533]
+          [58167, 4, 0], [58167, 0, 33], [58167, 0, 1533]
         ], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3
       },
       // --- SECCIÓN 62: JUGADOR ---
@@ -383,7 +383,6 @@ const datosCancion = {
         ], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3
       },
       // --- SECCIONES 83-92: VACÍO ---
-      { "lengthInSteps": 16, "mustHitSection": false, "sectionNotes": [], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3 },
       { "lengthInSteps": 16, "mustHitSection": false, "sectionNotes": [], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3 },
       { "lengthInSteps": 16, "mustHitSection": false, "sectionNotes": [], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3 },
       { "lengthInSteps": 16, "mustHitSection": false, "sectionNotes": [], "typeOfSection": 0, "altAnim": false, "bpm": 120, "changeBPM": false, "sectionBeats": 3 },
@@ -805,6 +804,7 @@ const datosCancion = {
   }
 };
 
+
 let partituraCancion = [];
 
 function limpiarOposiciones() {
@@ -881,7 +881,7 @@ convertirDatosNotas();
 // --- LOGICA DEL JUEGO ---
 const fondo = document.getElementById("fondo");
 const contenedorP1 = document.getElementById("contenedor-p1"); 
-const p2 = document.getElementById("p2"); 
+const p2 = document.getElementById("p2");  // ✅ MANTENIDO: Referencia al bot
 const dialogoBox = document.getElementById("dialogo");
 const textoElem = document.getElementById("texto");
 const receptoresArriba = document.getElementById("receptores-arriba");
@@ -891,6 +891,10 @@ const healthFill = document.getElementById("health-bar-fill");
 const videoContador = document.getElementById("contador");
 const audioCancion = document.getElementById("cancion");
 const videoFallo = document.getElementById("video-fallo");
+
+// ✅ NUEVAS referencias para animaciones
+const jugadorImg = document.getElementById("p1");
+const botImg = document.getElementById("p2");
 
 let estado = 0;
 let escribiendo = false;
@@ -912,6 +916,69 @@ let tiempoInicioCancion = 0;
 let indiceCancion = 0;
 let bucleActivo = false;
 
+// ===================================
+// ✅ NUEVO: SISTEMA DE ANIMACIONES DEL JUGADOR
+// ===================================
+const imagenesJugador = {
+  'izquierda': '../imagenes/j_izquierda.png',
+  'derecha': '../imagenes/j_derecha.png',
+  'arriba': '../imagenes/j_arriba.png',
+  'abajo': '../imagenes/j_abajo.png',
+  'default': '../imagenes/j_abajo.png'
+};
+
+function cambiarImagenJugador(direccion) {
+  if (!jugadorImg) return;
+  const nuevaImagen = imagenesJugador[direccion] || imagenesJugador['default'];
+  jugadorImg.src = nuevaImagen;
+}
+
+function restaurarImagenJugador() {
+  if (!jugadorImg) return;
+  jugadorImg.src = imagenesJugador['default'];
+}
+
+// ===================================
+// ✅ NUEVO: SISTEMA DE ANIMACIONES DEL BOT
+// ===================================
+const imagenesBot = {
+  'izquierda': '../imagenes/b1_izquierda.png',
+  'derecha': '../imagenes/b1_derecha.png',
+  'arriba': '../imagenes/b1_arriba.png',
+  'abajo': '../imagenes/b1_abajo.png',
+  'default': '../imagenes/b1_derecha.png'  // Imagen base del bot
+};
+
+function cambiarImagenBot(direccion) {
+  if (!botImg) return;
+  const nuevaImagen = imagenesBot[direccion] || imagenesBot['default'];
+  botImg.src = nuevaImagen;
+}
+
+function restaurarImagenBot() {
+  if (!botImg) return;
+  botImg.src = imagenesBot['default'];
+}
+
+// ===================================
+// ✅ NUEVO: FUNCIÓN PARA DETECTAR SI HAY NOTA EN EL RECEPTOR
+// ===================================
+function hayNotaEnReceptor(dir) {
+  const objetivoY = document.getElementById(dir).getBoundingClientRect().top;
+  const margenError = 80;
+  
+  for (let i = 0; i < notasEnPantalla.length; i++) {
+    let nota = notasEnPantalla[i];
+    if (nota.dir === dir && nota.mustHit) { // Solo verificar notas del jugador
+      const diferencia = Math.abs(nota.posY - objetivoY);
+      if (diferencia < margenError) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function obtenerTiempoCaidaMs() {
   const inicioY = document.getElementById("rec-izquierda").getBoundingClientRect().top;
   const finY = document.getElementById("izquierda").getBoundingClientRect().top;
@@ -919,11 +986,19 @@ function obtenerTiempoCaidaMs() {
   return (distancia / velocidad) * 16; 
 }
 
+// ✅ MEJORADA: Ahora anima al bot cuando juega sus notas
 function animarBot(direccion) {
   if(p2) {
+    // Cambiar la imagen del bot según la dirección
+    cambiarImagenBot(direccion);
+    
+    // Efecto visual adicional (brillo)
     p2.style.filter = "brightness(1.5) drop-shadow(0 0 10px #ff00ff)";
-    p2.style.transform = "scale(1.1)";
+    p2.style.transform = "scale(1.05)";
+    
     setTimeout(() => {
+      // Restaurar imagen base después de un momento
+      restaurarImagenBot();
       p2.style.filter = "";
       p2.style.transform = "scale(1)";
     }, 150);
@@ -949,7 +1024,9 @@ function spawnearNota(direccion, mustHit) {
   }
 
   const img = document.createElement('img');
-  img.src = direccion + '2.png'; 
+  // ✅ CORREGIDO: Agregar la ruta completa
+  img.src = '../imagenes/' + direccion + '2.png'; 
+  
   img.className = 'nota-cayendo';
   img.style.display = "block";
   img.style.left = centroX + "px";
@@ -971,7 +1048,6 @@ function bucleJuego() {
       indiceCancion++;
     }
   }
-  // ELIMINADA LA VERIFICACIÓN DE FIN DE NOTAS. AHORA DEPENDE DEL AUDIO.
 
   const limiteAbajo = document.getElementById("izquierda").getBoundingClientRect().bottom + 80;
   
@@ -982,10 +1058,12 @@ function bucleJuego() {
 
     if (nota.posY > limiteAbajo) {
       if (nota.mustHit) {
+        // Nota del jugador: MISS
         missTexto.classList.add("mostrar");
         setTimeout(() => missTexto.classList.remove("mostrar"), 800);
         bajarVida();
       } else {
+        // Nota del bot: Solo animar (sin penalización)
         animarBot(nota.dir);
       }
       document.body.removeChild(nota.elemento);
@@ -1008,15 +1086,38 @@ function verificarAciertoCancion(tecla) {
     if (nota.dir === dir && nota.mustHit) {
       const diferencia = Math.abs(nota.posY - objetivoY);
       if (diferencia < margenError) {
+        // ✅ HIT CORRECTO del jugador
         document.getElementById(dir).classList.add('activa');
         setTimeout(() => document.getElementById(dir).classList.remove('activa'), 200);
+        
+        // Cambiar imagen del jugador
+        cambiarImagenJugador(dir);
+        
         subirVida();
         document.body.removeChild(nota.elemento);
         notasEnPantalla.splice(i, 1);
-        return; 
+        return true; // Hubo hit
       }
     }
   }
+  return false; // No hubo hit
+}
+
+// ===================================
+// ✅ NUEVO: FUNCIÓN PARA MANEJAR TECLA PREMATURA (MISS)
+// ===================================
+function manejarTeclaPrematura(dir) {
+  // Mostrar MISS
+  missTexto.classList.add("mostrar");
+  setTimeout(() => missTexto.classList.remove("mostrar"), 800);
+  
+  // Bajar vida
+  bajarVida();
+  
+  // Cambiar imagen del jugador (aunque fue un miss)
+  cambiarImagenJugador(dir);
+  
+  console.log(`⚠️ Tecla prematura: ${dir} (MISS)`);
 }
 
 function escribirTexto(texto) {
@@ -1027,18 +1128,34 @@ function escribirTexto(texto) {
   }, 40);
 }
 
-const mapaTeclas = { 'w': 'arriba', 'W': 'arriba', 'a': 'izquierda', 'A': 'izquierda', 's': 'abajo', 'S': 'abajo', 'd': 'derecha', 'D': 'derecha' };
+const mapaTeclas = { 
+  'w': 'arriba', 'W': 'arriba', 
+  'a': 'izquierda', 'A': 'izquierda', 
+  's': 'abajo', 'S': 'abajo', 
+  'd': 'derecha', 'D': 'derecha' 
+};
 
 document.addEventListener('keydown', (e) => {
-  if (escuchandoTeclado) {
-    const idFlecha = mapaTeclas[e.key];
-    if (idFlecha) {
-      const el = document.getElementById(idFlecha);
-      if(el) el.classList.add('activa');
+  // Evitar repetición de tecla mantenida
+  if (e.repeat) return;
+  
+  const idFlecha = mapaTeclas[e.key];
+  
+  if (estado === 25 && idFlecha) {
+    // Activar flecha visual
+    const el = document.getElementById(idFlecha);
+    if(el) el.classList.add('activa');
+    
+    // Siempre cambiar imagen del jugador al presionar
+    cambiarImagenJugador(idFlecha);
+    
+    // Verificar si hubo hit o fue prematuro
+    const huboHit = verificarAciertoCancion(e.key);
+    
+    // Si no hubo hit → MISS por tecla prematura
+    if (!huboHit) {
+      manejarTeclaPrematura(idFlecha);
     }
-  }
-  if (estado === 25) {
-    verificarAciertoCancion(e.key);
   }
 });
 
@@ -1047,11 +1164,15 @@ document.addEventListener('keyup', (e) => {
   if (idFlecha) {
     const el = document.getElementById(idFlecha);
     if(el) el.classList.remove('activa');
+    
+    // Restaurar imagen por defecto del jugador
+    restaurarImagenJugador();
   }
 });
 
 function bajarVida() { 
   if (falloProcesado) return; 
+  
   vida = Math.max(0, vida - 10); 
   healthFill.style.width = vida + "%"; 
   if (vida <= 0) {
@@ -1059,7 +1180,10 @@ function bajarVida() {
   }
 }
 
-function subirVida() { vida = Math.min(100, vida + 10); healthFill.style.width = vida + "%"; }
+function subirVida() { 
+  vida = Math.min(100, vida + 10); 
+  healthFill.style.width = vida + "%"; 
+}
 
 function manejarFallo() {
   if (falloProcesado) return; 
@@ -1110,6 +1234,10 @@ function reiniciarNivel() {
   falloProcesado = false; 
   healthFill.style.width = "50%";
   
+  // Restaurar imágenes de ambos personajes
+  restaurarImagenJugador();
+  restaurarImagenBot();
+  
   estado = 24; 
   
   if (videoContador) {
@@ -1140,6 +1268,10 @@ function iniciarJuegoDirecto() {
 
   healthBar.style.display = "block";
   
+  // Restaurar imágenes al iniciar
+  restaurarImagenJugador();
+  restaurarImagenBot();
+  
   estado = 25; 
   bucleActivo = true; 
   indiceCancion = 0; 
@@ -1149,7 +1281,10 @@ function iniciarJuegoDirecto() {
   bucleJuego(); 
 }
 
-function manejarVictoriaNivel() {
+// ===================================
+// ✅ FUNCIÓN VICTORIA NIVEL 1 - INTEGRADA CON SISTEMA DE PROGRESO
+// ===================================
+async function manejarVictoriaNivel() {
   bucleActivo = false;
   if(audioCancion) {
     audioCancion.pause();
@@ -1164,11 +1299,44 @@ function manejarVictoriaNivel() {
   
   dialogoBox.style.display = "block";
   escribirTexto("¡Nivel Completado!");
+  
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  try {
+    if (typeof completarNivel === 'function') {
+      await completarNivel(1);
+      console.log("✅ Nivel 1 completado y guardado en el sistema");
+    } else {
+      console.warn("⚠️ completarNivel no disponible, usando método alternativo");
+      
+      const sesion = JSON.parse(localStorage.getItem('juego_sesion'));
+      if (sesion && sesion.loggedIn) {
+        try {
+          await fetch(`http://localhost:3000/api/progreso/${sesion.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nivelCompletado: 1 })
+          });
+          alert("🎉 ¡Nivel 1 completado! Progreso guardado.");
+        } catch (e) {
+          console.error("Error guardando:", e);
+          alert("⚠️ Nivel completado pero error al guardar.");
+        }
+      } else {
+        let actual = parseInt(sessionStorage.getItem('invitado_nivel')) || 1;
+        if (2 > actual) {
+          sessionStorage.setItem('invitado_nivel', 2);
+        }
+        alert("🎉 ¡Nivel 1 completado!\n\n⚠️ Modo invitado: El progreso se perderá al cerrar la pestaña.");
+      }
+    }
+  } catch (error) {
+    console.error("Error al guardar progreso del nivel 1:", error);
+  }
 }
 
 // --- EVENTOS DE VIDEOS Y AUDIO ---
 
-// 1. Evento para el VIDEO CONTADOR
 if (videoContador) {
   videoContador.addEventListener('ended', () => {
     iniciarJuegoDirecto();
@@ -1180,16 +1348,15 @@ if (videoContador) {
   });
 }
 
-// 2. Evento para que el nivel acabe cuando termine la MÚSICA
 if (audioCancion) {
   audioCancion.addEventListener('ended', () => {
-    if (bucleActivo) { // Solo ganar si estamos jugando
+    if (bucleActivo) {
       manejarVictoriaNivel();
     }
   });
 }
 
-document.body.addEventListener("click", (e) => {
+document.body.addEventListener("click", async (e) => {
   if (estado === 99) {
     clearTimeout(temporizadorFallo); 
     if(videoFallo) {
@@ -1202,14 +1369,12 @@ document.body.addEventListener("click", (e) => {
 
   if (estado === 50) {
     dialogoBox.style.display = "none";
-    localStorage.setItem('nivelMaximo', '2'); 
     window.location.href = "niveles.html";
     return;
   }
 
   if (estado === 9 || estado === 18 || estado === 21 || estado === 24 || estado === 25) return; 
 
-  // --- ESTADO 0: INICIO DEL JUEGO ---
   if (estado === 0) { 
     if(fondo) fondo.style.opacity = "1"; 
     if(contenedorP1) contenedorP1.style.opacity = "1"; 

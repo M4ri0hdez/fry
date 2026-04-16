@@ -10,9 +10,17 @@ body, html {
   pointer-events: none; 
 }
 
+/* ✅ Buena posición intermedia */
 #p2 {
-  position: absolute; bottom: 0; right: 50px; height: 240px;
-  z-index: 1; object-fit: contain; opacity: 0; transition: opacity 1.5s ease-in-out;
+  position: absolute; 
+  bottom: 0; 
+  right: 150px;  
+  height: 370px; 
+  width: auto;
+  z-index: 1; 
+  object-fit: contain; 
+  opacity: 0; 
+  transition: opacity 1.5s ease-in-out, filter 0.15s ease;
   pointer-events: none; 
 }
 
@@ -23,7 +31,13 @@ body, html {
   pointer-events: none; 
 }
 
-#p1 { height: 240px; object-fit: contain; }
+/* ✅ MODIFICADO: Jugador con tamaño grande */
+#p1 { 
+  height: 370px;  /* ⬅️ Tamaño grande (mismo que ajustaste en tutorial) */
+  width: auto;
+  object-fit: contain; 
+  transition: opacity 0.1s ease; 
+}
 
 .flecha {
   position: absolute; width: 60px; height: 60px; opacity: 0;

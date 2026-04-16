@@ -9,10 +9,14 @@
 
 <!-- RUTAS ACTUALIZADAS: ../imagenes/ -->
 <img id="fondo" src="../imagenes/tutorial.jpg">
-<img id="p2" src="../imagenes/si.jpg">
+
+<!-- ❌ ELIMINADO: Imagen del bot/rival (P2) -->
+<!-- <img id="p2" src="../imagenes/si.jpg"> -->
 
 <div id="contenedor-p1">
-  <img id="p1" src="../imagenes/personaje1.jpg">
+  <!-- ✅ CAMBIADO: Imagen base del jugador ahora es j_abajo.png -->
+  <img id="p1" src="../imagenes/j_abajo.png">
+  
   <img id="arriba" class="flecha" src="../imagenes/arriba.png">
   <img id="abajo" class="flecha" src="../imagenes/abajo.png">
   <img id="izquierda" class="flecha" src="../imagenes/izquierda.png">
@@ -52,8 +56,6 @@
   <div id="nombre">???</div>
   <div id="texto"></div>
 </div>
-
-<!-- ❌ ELIMINADO: Botón de completar tutorial (ya no es necesario) -->
 
 <!-- 🔑 CARGAR niveles.js PARA GUARDAR PROGRESO -->
 <script src="niveles.js"></script>
