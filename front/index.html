@@ -4,38 +4,60 @@
   <meta charset="UTF-8">
   <title>Intro Juego</title>
   <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
-  <!-- 👤 INFO DE USUARIO (superior derecha) -->
+  <!-- 👤 Info Usuario -->
   <div id="info-usuario" class="info-usuario">
     <span id="nombre-usuario">🔒 Sin sesión</span>
     <button id="btn-cerrar-sesion" class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar Sesión</button>
   </div>
 
-  <button id="start">Iniciar</button>
+  <!-- 🔘 Botón Iniciar -->
+  <button id="start">▶️ Iniciar</button>
 
-  <video id="video" loop playsinline>
-    <source src="../media/inicio.mp4" type="video/mp4">
+  <!-- 🎬 Video - SIN STYLE INLINE, DEJA QUE EL CSS LO CONTROLE -->
+  <video 
+    id="video" 
+    loop 
+    playsinline 
+    muted
+    preload="auto"
+  >
+    <source src="media/inicio.mp4" type='video/mp4' />
+    Tu navegador no soporta video HTML5.
   </video>
 
+  <!-- 🎮 Menú Principal -->
   <div id="menu">
-    <button onclick="iniciar()">Jugar</button>
-    <button onclick="irASesion()">Sesión</button>
+    <h1 class="titulo-juego">🎮 FNF GAME</h1>
+    <div class="botones-menu">
+      <button onclick="iniciar()" class="btn-menu btn-jugar">🎮 Jugar</button>
+      <button onclick="irASesion()" class="btn-menu btn-sesion">🔑 Sesión</button>
+    </div>
   </div>
 
+  <!-- 💬 Modal Error -->
+  <div id="modal-fondo" class="modal-fondo">
+    <div class="modal-caja">
+      <h2>⚠️ Error</h2>
+      <p id="modal-mensaje"></p>
+      <button class="boton-modal" onclick="cerrarModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- 🧪 Script -->
   <script>
     const video = document.getElementById("video");
     const btn = document.getElementById("start");
     const menu = document.getElementById("menu");
-
     let menuMostrado = false;
 
-    // ===================================
-    // 👤 CARGAR INFO DE USUARIO AL INICIAR
-    // ===================================
     document.addEventListener("DOMContentLoaded", () => {
       actualizarInfoUsuario();
+      console.log('📋 Página cargada');
+      console.log('🎬 Video:', video ? '✅' : '❌');
     });
 
     function actualizarInfoUsuario() {
@@ -45,70 +67,79 @@
       const infoContainer = document.getElementById('info-usuario');
 
       if (sesion && sesion.loggedIn) {
-        // ✅ Hay sesión activa
-        nombreEl.textContent = `👤 ${sesion.usuario}`;
+        nombreEl.textContent = '👤 ' + sesion.usuario;
         infoContainer.classList.add('activo');
         btnCerrar.style.display = 'inline-block';
-        console.log(`👤 Usuario activo: ${sesion.usuario}`);
       } else {
-        // ❌ Sin sesión
         nombreEl.textContent = '🔒 Sin sesión';
         infoContainer.classList.remove('activo');
         btnCerrar.style.display = 'none';
       }
     }
 
-    // ▶️ INICIAR VIDEO
     btn.addEventListener("click", () => {
+      console.log('▶️ Iniciar presionado');
+      
+      // Mostrar video - el CSS ya tiene position:fixed, width:100%, height:100%
       video.style.display = "block";
       btn.style.display = "none";
-      video.muted = false;
-      video.volume = 1;
-      video.play();
+      
+      setTimeout(() => {
+        video.muted = false;
+      }, 300);
+      
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log('✅ Video reproduciéndose');
+        }).catch(error => {
+          console.error('❌ Error:', error);
+          mostrarModal('⚠️ Error', 'Error: ' + error.message);
+        });
+      } else {
+        video.play();
+      }
     });
 
-    // ⏱️ MOSTRAR MENÚ EN SEGUNDO 6
     video.addEventListener("timeupdate", () => {
       if (video.currentTime >= 6 && !menuMostrado) {
         menu.style.display = "flex";
         setTimeout(() => menu.classList.add("mostrar"), 50);
         menuMostrado = true;
-        
-        // Actualizar info de usuario cuando aparece el menú
         actualizarInfoUsuario();
       }
     });
 
-    // 🚫 EVITAR PAUSA
-    video.addEventListener("pause", () => {
-      video.play();
-    });
-
-    // 🎮 JUGAR
     function iniciar() {
       document.body.style.opacity = "0";
-      setTimeout(() => {
-        window.location.href = "niveles.html";
-      }, 500);
+      setTimeout(() => { window.location.href = "niveles.html"; }, 500);
     }
 
-    // 🔑 IR A SESIÓN
     function irASesion() {
       window.location.href = "sesion.html";
     }
 
-    // 🔒 CERRAR SESIÓN
     function cerrarSesion() {
       if (confirm('¿Quieres cerrar tu sesión?')) {
         localStorage.removeItem('juego_sesion');
-        console.log('🔒 Sesión cerrada');
-        
-        // Actualizar la interfaz inmediatamente
         actualizarInfoUsuario();
-        
-        // Opcional: recargar después de un momento
-        // location.reload();
       }
+    }
+
+    function mostrarModal(titulo, mensaje) {
+      const modal = document.getElementById('modal-fondo');
+      const msgEl = document.getElementById('modal-mensaje');
+      if (modal && msgEl) {
+        modal.querySelector('h2').textContent = titulo;
+        msgEl.innerHTML = mensaje;
+        modal.style.display = 'flex';
+      }
+    }
+    
+    function cerrarModal() {
+      const modal = document.getElementById('modal-fondo');
+      if (modal) modal.style.display = 'none';
     }
   </script>
 <script src="prueba.js"></script>
